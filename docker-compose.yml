@@ -12,10 +12,14 @@ services:
       - ./hadoop-hive.env
     ports:
       - "50070:50070"
+      - "8020:8020"
+      - "9000:9000"
+    hostname: namenode
+    domainname: namenode
     networks:
       net_pet:
         ipv4_address: 172.27.1.5
-  
+
   datanode:
     image: bde2020/hadoop-datanode:2.0.0-hadoop2.7.4-java8
     container_name: datanode
@@ -30,6 +34,7 @@ services:
       - namenode
     ports:
       - "50075:50075"
+    hostname: datanode
     networks:
       net_pet:
         ipv4_address: 172.27.1.6
@@ -76,7 +81,7 @@ services:
         ipv4_address: 172.27.1.9
     
   spark-master:
-    image: bde2020/spark-master:2.4.0-hadoop2.7
+    image: bde2020/spark-master:2.4.5-hadoop2.7
     container_name: spark-master
     ports:
       - 8080:8080
@@ -85,18 +90,20 @@ services:
       - CORE_CONF_fs_defaultFS=hdfs://namenode:8020
     env_file:
       - ./hadoop-hive.env
+#    volumes:
+#      - ~/workspace/big-data-infra/spark-master-log4j.properties:/spark/conf/log4j.properties:rw
+#      - ~/workspace/big-data-infra/spark-master-spark-defaults.conf:/spark/conf/spark-defaults.conf:rw
+    hostname: spark-master
     networks:
       net_pet:
         ipv4_address: 172.27.1.10
      
   spark-worker:
-    image: bde2020/spark-worker:2.4.0-hadoop2.7
+    image: bde2020/spark-worker:2.4.5-hadoop2.7
     container_name: spark-worker
-    depends_on:
-      - spark-master
     environment:
       - SPARK_MASTER=spark://spark-master:7077
-      - CORE_CONF_fs_defaultFS=hdfs://namenode:8020
+#      - CORE_CONF_fs_defaultFS=hdfs://namenode:8020
       - HIVE_CORE_CONF_javax_jdo_option_ConnectionURL=jdbc:postgresql://hive-metastore/metastore
     depends_on:
       - spark-master
